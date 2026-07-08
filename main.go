@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -28,7 +29,7 @@ import (
 )
 
 const (
-	appVersion = "1.0"
+	appVersion = "1.1"
 	repoURL    = "https://github.com/igor-blag/ssl-generator"
 )
 
@@ -369,9 +370,11 @@ func main() {
 			generateBtn.Enable()
 			generateBtn.SetText("Сгенерировать CSR")
 
-			msg := fmt.Sprintf("Ключ: %s\nCSR: %s", filepath.Base(keyPath), filepath.Base(csrPath))
+			msg := fmt.Sprintf("Файлы созданы в:\n%s\n\n", dir)
+			msg += fmt.Sprintf("1. %s — приватный ключ\n   Сохраните его! Он понадобится\n   при загрузке сертификата на хостинг.\n\n", filepath.Base(keyPath))
+			msg += fmt.Sprintf("2. %s — запрос на сертификат (CSR)\n   Подпишите его в КриптоПро.\n   Приложите отсоединённую подпись\n   %s.sig к заявке.", filepath.Base(csrPath), filepath.Base(csrPath))
 			if cnfCheck.Checked {
-				msg += "\nCNF: " + filepath.Base(cnfPath)
+				msg += fmt.Sprintf("\n\n3. %s — конфиг OpenSSL\n   (для справки)", filepath.Base(cnfPath))
 			}
 			dialog.ShowInformation("Готово", msg, w)
 
@@ -591,7 +594,8 @@ func showAboutDialog(w fyne.Window) {
 	)
 	platform := fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
 	platformLabel := widget.NewLabel(fmt.Sprintf("Платформа: %s", platform))
-	linkLabel := widget.NewLabel(repoURL)
+	parsedURL, _ := url.Parse(repoURL)
+	linkLabel := widget.NewHyperlink(repoURL, parsedURL)
 	updateBtn := widget.NewButton("Проверить обновления", func() {
 		checkForUpdates(w)
 	})
